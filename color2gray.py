@@ -71,7 +71,8 @@ class COLOR2GRAY(object):
         # dataset_target = dataset_target[:, :, :, np.newaxis]
 
     def train(self, batch_size=int(config.get('train', 'batch_size')), epoch_num=int(config.get('train', 'epoch_num'))):
-        saving_path = os.path.join(self.model_dir, 'Color2Gray.ckpt')
+        saving_path = os.path.join(self.model_dir, '{}.ckpt'.format(
+            config.get('train', 'model_name')))
 
         # Loss function
         ae_inputs = tf.placeholder(
@@ -79,13 +80,19 @@ class COLOR2GRAY(object):
         ae_targets = tf.placeholder(
             tf.float32, (None, 128, 128, 3), name='aeTarget')
 
+        # Get Autoencoder tensor
         ae_outputs = Autoencoder(ae_inputs).run()
 
+        # Assign loss function
         loss = tf.reduce_mean(tf.square(ae_outputs - ae_targets))
+
+        # Assingn Adam optimizer
         train_op = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
 
+        # Initialize tensor variables
         init = tf.global_variables_initializer()
-        saver_ = tf.train.Saver(max_to_keep=3)
+        # Save models from last two epoches
+        saver_ = tf.train.Saver(max_to_keep=2)
 
         batch_img = self.dataset[0: batch_size]
         batch_out = self.dataset_target[0: batch_size]
@@ -111,3 +118,8 @@ class COLOR2GRAY(object):
             saver_.save(sess, saving_path, global_step=ep)
 
         sess.close()
+
+if __name__ == "__main__":
+    obj = COLOR2GRAY()
+    obj.read_dataset()
+    obj.train()
