@@ -20,11 +20,12 @@ config = scnf()
 config.read('config.ini')
 
 
-class PPREDICT(object):
+class PREDICT(object):
     '''
     Create gray-scale image for set of color images using trained model.
     '''
-    def predict(self, color_img_dir=config.get('directories', 'validate'), img_type=config.get('train', 'img_type')):
+
+    def predict(self, color_img_dir=config.get('directories', 'validate'), predict_img_dir=config.get('directories', 'pred_img_dir'), img_type=config.get('train', 'img_type')):
         '''
         color_img_dir: Path of folder with color images to test.
         img_type: Type of image, eg: png, jpeg, jpg.
@@ -40,7 +41,8 @@ class PPREDICT(object):
                 file_paths = glob.glob(join(
                     '.', color_img_dir, '*.' + img_type))
                 test_data = [np.array(cv2.imread(file)) for file in file_paths]
-                file_names = list(map(lambda x: splitext(split(x)[-1])[0], file_paths))
+                file_names = list(
+                    map(lambda x: splitext(split(x)[-1])[0], file_paths))
 
                 test_dataset = np.asarray(test_data)
                 # print(test_dataset.shape)
@@ -52,12 +54,12 @@ class PPREDICT(object):
                 gray_imgs = sess.run(train_op, feed_dict={
                                      ae_inputs: test_dataset})
                 for i in range(gray_imgs.shape[0]):
-                    cv2.imwrite(join('.', config.get('directories',
-                                                     'pred_img_dir'), '{}.{}'.format(file_names[i], img_type)), gray_imgs[i])
+                    cv2.imwrite(join('.', predict_img_dir, '{}.{}'.format(
+                        file_names[i], img_type)), gray_imgs[i])
         except Exception as e:
             print("Exception: ", e)
 
 
 if __name__ == "__main__":
-    pred_obj = PPREDICT()
+    pred_obj = PREDICT()
     pred_obj.predict()
